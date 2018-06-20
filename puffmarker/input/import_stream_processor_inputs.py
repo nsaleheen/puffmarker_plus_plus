@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 
 from puffmarker.utils.PUFFMARKER_CONSTANTS import *
 
+rip_filename = 'rip.csv'
+
 ax_left_filename = 'left-wrist-accelx.csv'
 ay_left_filename = 'left-wrist-accely.csv'
 az_left_filename = 'left-wrist-accelz.csv'
@@ -82,6 +84,11 @@ def get_accelerometer(data_dir, wrist) -> List[DataPoint]:
         accel.append(DataPoint(start_time=val.start_time, offset=val.offset, sample=sample))
 
     return accel
+
+def get_respiration(data_dir) -> List[DataPoint]:
+    rip = load_data(data_dir + rip_filename)
+
+    return rip
 
 
 def get_gyroscope(data_dir, wrist) -> List[DataPoint]:

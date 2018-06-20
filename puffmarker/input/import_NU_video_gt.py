@@ -17,7 +17,9 @@ def line_parser(input):
     ts, sample = input.split(',', 1)
     sample = convert_sample(sample)
     ts = sample[6]
-    gt = sample[8]
+    # gt = sample[8]
+    # gt = sample[8+6] #smoking conf
+    gt = sample[8+9] #eating conf
     start_time = int(float(ts)) / 1000.0
     accel_dp = DataPoint(start_time=datetime.fromtimestamp(start_time, tz),
                          offset='0', sample=[sample[0], -sample[1], sample[2]])

@@ -121,12 +121,12 @@ def moving_average_convergence_divergence_new(slow_moving_average_data: List[Dat
             nxt_ay_mean = np.mean(ay)
             nxt_ay_sd = np.std(ay)
 
-            if prev_peak_dur > 0.45 and next_peak_dur > 0.45 and prev_peak_dur < 4 and next_peak_dur < 4:
-                intersection_points.append(DataPoint(start_time=slow_moving_average_data[start_index].start_time,
-                                                     end_time=slow_moving_average_data[end_index].start_time,
-                                                     sample=[start_index, end_index, prev_peak_dur, next_peak_dur,
-                                                             prev_peak_diff, next_peak_diff,
-                                                             prev_ay_mean, nxt_ay_mean, prev_ay_sd, nxt_ay_sd]))
+            # if prev_peak_dur > 0.45 and next_peak_dur > 0.45 and prev_peak_dur < 4 and next_peak_dur < 4:
+            intersection_points.append(DataPoint(start_time=slow_moving_average_data[start_index].start_time,
+                                                 end_time=slow_moving_average_data[end_index].start_time,
+                                                 sample=[start_index, end_index, prev_peak_dur, next_peak_dur,
+                                                         prev_peak_diff, next_peak_diff,
+                                                         prev_ay_mean, nxt_ay_mean, prev_ay_sd, nxt_ay_sd]))
 
         else:
             cur_index = cur_index + 1

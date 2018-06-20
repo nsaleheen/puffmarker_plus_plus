@@ -58,6 +58,8 @@ def plot_puffs_and_episodes():
 
             smoking_epis = get_marked_smoking_episodes(cur_dir, pid, sid)
 
+            rip = get_respiration(cur_dir)
+
             accel_left = get_accelerometer(cur_dir, LEFT_WRIST)
             gyro_left = get_gyroscope(cur_dir, LEFT_WRIST)
             gyro_left = magnitude(gyro_left)
@@ -76,13 +78,15 @@ def plot_puffs_and_episodes():
             # plt.plot([accel_left[0].start_time, accel_left[-1].start_time], [0, 0], '--k')
             # plot_signal(gyro_left, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag'])
 
-            plot_signal(accel_right, 6, 1, 'Accel', ['R-ax', 'R-ay', 'R-az'])
-            plt.plot([accel_right[0].start_time, accel_right[-1].start_time], [6, 6], '--k')
-            plot_signal(gyro_right, 8.5, 1.0 / 100, 'Gyro', ['gyro_mag'])
+            plot_signal(rip, -5, 1.0/500, 'Rip', ['rip'])
+
+            plot_signal(accel_right, 0, 1, 'Accel', ['R-ax', 'R-ay', 'R-az'])
+            plt.plot([accel_right[0].start_time, accel_right[-1].start_time], [0, 0], '--k')
+            plot_signal(gyro_right, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag'])
             # if len(puffs_left)>0:
             #     plot_point(puffs_left, 10)
             if len(puffs_right)>0:
-                plot_point(puffs_right, 11)
+                plot_point(puffs_right, 6)
             # plot_line(smoking_epis, 12)
             plt.xticks(rotation=90)
             plt.legend()
@@ -92,7 +96,7 @@ def plot_puffs_and_episodes():
                 t_delta = timedelta(seconds=15)
                 plt.xlim(epi.start_time - t_delta, epi.end_time + t_delta)
                 # plt.text(epi.start_time - t_delta, 10, 'Puff-left', fontsize=20)
-                plt.text(epi.start_time - t_delta, 11, 'Puff-right', fontsize=20)
+                # plt.text(epi.start_time - t_delta, 11, 'Puff-right', fontsize=20)
                 # plt.text(epi.start_time - t_delta, 12, 'episode', fontsize=20)
                 plt.title(pid + '_' + sid + '_e' + str(i))
                 plt.xticks(rotation=90)
@@ -108,9 +112,9 @@ def plot_puffs_and_episodes():
             #     plt.savefig(data_dir + '/plot_signal/' + pid + '_' + sid + '_l' + str(i) + '_puff.png')
 
             for i, epi in enumerate(puffs_right):
-                t_delta = timedelta(seconds=5)
+                t_delta = timedelta(seconds=15)
                 plt.xlim(epi.start_time - t_delta, epi.start_time + t_delta)
-                plt.text(epi.start_time - t_delta, 11, 'Puff-right', fontsize=20)
+                # plt.text(epi.start_time - t_delta, 11, 'Puff-right', fontsize=20)
                 plt.title(pid + '_' + sid + '_pl' + str(i))
                 plt.legend()
                 plt.savefig(data_dir + '/plot_signal/' + pid + '_' + sid + '_r' + str(i) + '_puff.png')

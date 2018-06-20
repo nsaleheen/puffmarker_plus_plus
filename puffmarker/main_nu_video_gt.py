@@ -5,6 +5,7 @@ import seaborn as sns
 from puffmarker.input.import_NU_video_gt import *
 from puffmarker.plots.plot_signal import *
 from puffmarker.wrist_features import *
+from puffmarker.input.import_stream_processor_inputs import get_respiration
 
 pids = ['202_update', '205', '208', '209', '211', '212', '215', '218']
 sids = [['0626'], ['0818'], [], ['0929'], ['1002'], ['1013'], ['1027'],
@@ -14,7 +15,7 @@ stream_process_puffs_filenames = ['202_0626_sp.csv', '205_0818_sp.csv',
                                   '212_1013_sp.csv', '215_1027_sp.csv',
                                   '218_1103_sp.csv']
 # pids = ['p04', 'p05', 'p06']
-pids = ['202_update', '205', '211', '215', '218']
+pids = ['202_update', '205', '211', '218']
 stream_process_puffs_filenames = ['202_0626_sp.csv', '205_0818_sp.csv',
                                   '211_1002_sp.csv',
                                   '215_1027_sp.csv',
@@ -49,11 +50,15 @@ def get_puff_labels(gt: List[DataPoint]) -> List[DataPoint]:
 def main_process_puffmarker():
     data_dir = '/home/nsaleheen/data/NU_data/Encoded_Data/'
     dir_sufix = '/RIGHT_WRIST/ACC_GYR/'
-    filename = 'acc_gyr_label_inlab_Smoking.csv'
+    # filename = 'acc_gyr_label_inlab_Smoking.csv'
+    filename = 'acc_gyr_label_inlab_Eating.csv'
+    # filename = 'acc_gyr_label_inlab_False.csv'
     all_features = []
+    Ys = []
     for iii, pid in enumerate(pids):
         cur_data_dir = data_dir + pid + dir_sufix
         print(cur_data_dir)
+        rip = get_respiration(cur_data_dir)
 
         accel, gyro, gt = load_data(cur_data_dir + filename)
         stream_process_puffs_filename = stream_process_puffs_filenames[iii]
@@ -76,7 +81,7 @@ def main_process_puffmarker():
             gyr_mag_8000, gyr_mag_800, accel)
 
         gyr_intersections = filter_with_duration(gyr_intersections)
-        gyr_intersections = filter_with_roll_pitch(gyr_intersections, roll_list, pitch_list, yaw_list)
+        # gyr_intersections = filter_with_roll_pitch(gyr_intersections, roll_list, pitch_list, yaw_list)
         # gyr_intersections = filter_with_complementary_roll_pitch(gyr_intersections, roll_list, pitch_list, yaw_list, accel_mag)
         #
         ay = [v.sample[1] for v in accel]
@@ -100,36 +105,52 @@ def main_process_puffmarker():
             DataPoint(start_time=v.start_time, end_time=v.end_time, sample=[1])
             for v in features]
 
+        for f in cand:
+            is_found = False
+            for g in gt:
+                if min(f.end_time, g.end_time) > max(f.start_time, g.start_time):
+                    is_found = True
+            if is_found == True:
+                Ys.append(1)
+            else:
+                Ys.append(0)
+
+
         all_features.extend(features)
-        print('#cand = ', len(cand))
-
-        plot_signal(accel, 0, 1, 'Accel', ['accel-x', 'accel-y', 'accel-z'])
-        plot_signal(gyr_mag, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag'])
-        # plot_signal(gyr_mag_800, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag800'])
-        # plot_signal(gyr_mag_8000, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag8000'])
-
-        # plot_line([DataPoint(accel[0].start_time, accel[-1].start_time, '0', [1])], 0)
-        plt.plot([accel[0].start_time, accel[-1].start_time], [0, 0], '--k')
-
-        # plot_line([DataPoint(accel[0].start_time, accel[-1].start_time, '0', [1])], 2.5)
-        # plot_point(gt, -3, 1, 'gt', ['puff'])
-
-        plot_point(detected_puffs, -3, 1, pid, ['stream_processor'])
-        plot_point(detected_puffs, 6, 1, pid, ['stream_processor'])
-
-        plot_line(gt, 5)
-        plot_line(cand, 4)
-        for i, v in enumerate(gt):
-            t_delta = timedelta(seconds=2)
-            plt.xlim(v.start_time - t_delta, v.end_time + t_delta)
-            # plt.text(v.start_time - t_delta, 4, 'Cand', fontsize=20)
-            plt.text(v.start_time - t_delta, 5, 'gt', fontsize=20)
-            plt.title(pid + '_' + str(i))
-            plt.legend()
-            plt.savefig(data_dir + '/plot_new/' + pid + '_' + str(i) + '_puff.png')
-        plt.legend()
-        plt.show()
-    return all_features
+        # print('#cand = ', len(cand))
+        #
+        # plot_signal(rip, -7, 1.0/500, 'Rip', ['rip'])
+        #
+        # plot_signal(accel, 0, 1, 'Accel', ['accel-x', 'accel-y', 'accel-z'])
+        # plot_signal(gyr_mag, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag'])
+        # # plot_signal(gyr_mag_800, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag800'])
+        # # plot_signal(gyr_mag_8000, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag8000'])
+        #
+        # # plot_line([DataPoint(accel[0].start_time, accel[-1].start_time, '0', [1])], 0)
+        # plt.plot([accel[0].start_time, accel[-1].start_time], [0, 0], '--k')
+        #
+        # # plot_line([DataPoint(accel[0].start_time, accel[-1].start_time, '0', [1])], 2.5)
+        # # plot_point(gt, -3, 1, 'gt', ['puff'])
+        #
+        # plot_point(detected_puffs, -3, 1, pid, ['stream_processor'])
+        # plot_point(detected_puffs, 6, 1, pid, ['stream_processor'])
+        #
+        # plot_line(gt, 5)
+        # plot_line(cand, 4)
+        # for i, v in enumerate(gt):
+        #     t_delta = timedelta(seconds=5)
+        #     plt.xlim(v.start_time - t_delta, v.end_time + t_delta)
+        #     # plt.text(v.start_time - t_delta, 4, 'Cand', fontsize=20)
+        #     plt.text(v.start_time - t_delta, 5, 'gt', fontsize=20)
+        #     plt.title(pid + '_' + str(i))
+        #     plt.legend()
+        #     # plt.savefig(data_dir + '/plot_new/' + pid + '_' + str(i) + '_puff.png')
+        #     # plt.savefig(data_dir + '/plot_new/' + pid + '_' + str(i) + '_bite.png')
+        #     # plt.savefig(data_dir + '/plot_new/' + pid + '_' + str(i) + '_confounding_smoking.png')
+        #     plt.savefig(data_dir + '/plot_new/' + pid + '_' + str(i) + '_confounding_eating.png')
+        # plt.legend()
+        # plt.show()
+    return all_features, Ys
 
 
 if __name__ == '__main__':
@@ -141,13 +162,39 @@ if __name__ == '__main__':
     # plt.title('plot for sin(x)+sin(y)')
     # plt.show()
 
-    all_features = main_process_puffmarker()
-    roll = [x.sample[1] for i, x in enumerate(all_features)]
-    pitch = [x.sample[5] for i, x in enumerate(all_features)]
-    yaw = [x.sample[9] for i, x in enumerate(all_features)]
-    print('avg roll = ' + str(min(roll)) + ', ' + str(max(roll)))
-    print('avg pitch = ' + str(min(pitch)) + ', ' + str(max(pitch)))
-    print('avg yaw = ' + str(min(yaw)) + ', ' + str(max(yaw)))
+    all_features, Ys = main_process_puffmarker()
+
+    print('LEN::::', len(all_features), len(Ys), sum(Ys))
+
+    Ys = np.array(Ys)
+    all_features = np.array(all_features)
+    all_features0 = all_features[Ys==0]
+    Ys0 = Ys[Ys==0]
+    all_features1 = all_features[Ys==1]
+    Ys1 = Ys[Ys==1]
+
+    roll0 = [x.sample[1] for i, x in enumerate(all_features0)]
+    pitch0 = [x.sample[5] for i, x in enumerate(all_features0)]
+    yaw0 = [x.sample[9] for i, x in enumerate(all_features0)]
+    roll1 = [x.sample[1] for i, x in enumerate(all_features1)]
+    pitch1 = [x.sample[5] for i, x in enumerate(all_features1)]
+    yaw1 = [x.sample[9] for i, x in enumerate(all_features1)]
+    plt.plot(roll0, pitch0, '.b')
+    plt.plot(roll1, pitch1, '.r')
+    plt.title('roll-pitch')
+    plt.show()
+    plt.plot(roll0, yaw0, '.b')
+    plt.plot(roll1, yaw1, '.r')
+    plt.title('roll-yaw')
+    plt.show()
+    plt.plot(pitch0, yaw0, '.b')
+    plt.plot(pitch1, yaw1, '.r')
+    plt.title('pitch-yaw')
+    plt.show()
+
+    # print('avg roll = ' + str(min(roll)) + ', ' + str(max(roll)))
+    # print('avg pitch = ' + str(min(pitch)) + ', ' + str(max(pitch)))
+    # print('avg yaw = ' + str(min(yaw)) + ', ' + str(max(yaw)))
 
 # avg roll = 4.64535557352, 51.7689940023
 # avg pitch = -133.469444281, -113.229638214
