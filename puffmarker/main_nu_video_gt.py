@@ -30,25 +30,28 @@ stream_process_puffs_filename = '202_0626_sp.csv'
 #     return label
 
 
-def get_puff_labels(gt: List[DataPoint]) -> List[DataPoint]:
+def get_event_labels(gt: List[DataPoint], label=1) -> List[DataPoint]:
+    if len(gt) == 0:
+        return []
     puff_labels = []
     i = 0
     while i < len(gt):
-        if gt[i].sample == 1:
+        if gt[i] != None and gt[i].sample == 1:
             start_time = gt[i].start_time
             while i < len(gt) and gt[i].sample == 1:
                 i += 1
             end_time = gt[i - 1].start_time
             puff_labels.append(
                 DataPoint(start_time=start_time, end_time=end_time,
-                          offset=gt[i - 1].offset, sample=[1]))
+                          offset=gt[i - 1].offset, sample=[label]))
         else:
             i += 1
     return puff_labels
 
 
 def main_process_puffmarker():
-    data_dir = '/home/nsaleheen/data/NU_data/Encoded_Data/'
+    data_dir = '/home/nsleheen/data/NU_data/Encoded_Data/'
+
     dir_sufix = '/RIGHT_WRIST/ACC_GYR/'
     # filename = 'acc_gyr_label_inlab_Smoking.csv'
     filename = 'acc_gyr_label_inlab_Eating.csv'
@@ -58,21 +61,22 @@ def main_process_puffmarker():
     for iii, pid in enumerate(pids):
         cur_data_dir = data_dir + pid + dir_sufix
         print(cur_data_dir)
-        rip = get_respiration(cur_data_dir)
+        # rip = get_respiration(cur_data_dir)
 
-        accel, gyro, gt = load_data(cur_data_dir + filename)
-        stream_process_puffs_filename = stream_process_puffs_filenames[iii]
-        detected_puffs = load_detected_puff_timings(
-            '/home/nsaleheen/data/NU_data/Encoded_Data/stream-processor-outputs/' + stream_process_puffs_filename)
-        detected_puffs = [v for v in detected_puffs if v.start_time >= accel[0].start_time and v.start_time <=accel[-1].start_time]
-        gt = get_puff_labels(gt)
-        print('------------------', len(detected_puffs), len(gt))
+        # accel, gyro, gt_sd, gt_fd, gt_dd, gt_cd = load_NU_data(cur_data_dir + filename)
+        accel, gyro, gt_sd, gt_fd, gt_dd, gt_cd = import_data(cur_data_dir)
+
+        gt_sd = get_event_labels(gt_sd, label_sd)
+        gt_fd = get_event_labels(gt_fd, label_fd)
+        gt_dd = get_event_labels(gt_dd, label_dd)
+        gt_cd = get_event_labels(gt_cd, label_cd)
+        print(pid, '------------------', len(gt_sd), len(gt_fd), len(gt_dd), len(gt_cd))
         # -------------------------------------
         gyr_mag = magnitude(gyro)
         accel_mag = magnitude(accel)
 
-        roll_list, pitch_list, yaw_list = calculate_roll_pitch_yaw(accel)
-        # roll_list, pitch_list, yaw_list = complementary_filter(accel, gyro)
+        # roll_list, pitch_list, yaw_list = calculate_roll_pitch_yaw(accel)
+        roll_list, pitch_list, yaw_list = complementary_filter(accel, gyro)
 
         gyr_mag_800 = smooth(gyr_mag, FAST_MOVING_AVG_SIZE)
         gyr_mag_8000 = smooth(gyr_mag, SLOW_MOVING_AVG_SIZE)
@@ -80,13 +84,13 @@ def main_process_puffmarker():
         gyr_intersections = moving_average_convergence_divergence_new(
             gyr_mag_8000, gyr_mag_800, accel)
 
-        gyr_intersections = filter_with_duration(gyr_intersections)
+        # gyr_intersections = filter_with_duration(gyr_intersections)
         # gyr_intersections = filter_with_roll_pitch(gyr_intersections, roll_list, pitch_list, yaw_list)
         # gyr_intersections = filter_with_complementary_roll_pitch(gyr_intersections, roll_list, pitch_list, yaw_list, accel_mag)
         #
-        ay = [v.sample[1] for v in accel]
-        print('75=' + str(np.percentile(ay, 75)) + '; 80=' + str(
-            np.percentile(ay, 80)) + '; 90=' + str(np.percentile(ay, 90)))
+        # ay = [v.sample[1] for v in accel]
+        # print('75=' + str(np.percentile(ay, 75)) + '; 80=' + str(
+        #     np.percentile(ay, 80)) + '; 90=' + str(np.percentile(ay, 90)))
         # print('75=' + str(np.percentile(ay, 75)) + '; 80=' + str(np.percentile(ay, 75)))
         # gyr_intersections = filter_with_accleY(gyr_intersections, accel, accel_mag)
         # gyr_intersections = filter_with_accleY_interval(gyr_intersections, accel, accel_mag, min(0.6, np.percentile(ay, 90)))
@@ -95,26 +99,40 @@ def main_process_puffmarker():
                                               roll_list, pitch_list, yaw_list,
                                               accel_mag, accel)
 
-        # -------------------------------------
-        #         features = compute_wrist_features(accel,
-        #                                               gyro,
-        #                                               FAST_MOVING_AVG_SIZE,
-        #                                               SLOW_MOVING_AVG_SIZE)
-
         cand = [
             DataPoint(start_time=v.start_time, end_time=v.end_time, sample=[1])
             for v in features]
 
         for f in cand:
-            is_found = False
-            for g in gt:
+            is_smoking = False
+            is_feeding = False
+            is_drinking = False
+            is_confounding = False
+            for g in gt_sd:
                 if min(f.end_time, g.end_time) > max(f.start_time, g.start_time):
-                    is_found = True
-            if is_found == True:
-                Ys.append(1)
+                    is_smoking = True
+            for g in gt_fd:
+                if min(f.end_time, g.end_time) > max(f.start_time, g.start_time):
+                    is_feeding = True
+            for g in gt_dd:
+                if min(f.end_time, g.end_time) > max(f.start_time, g.start_time):
+                    is_drinking = True
+            for g in gt_cd:
+                if min(f.end_time, g.end_time) > max(f.start_time, g.start_time):
+                    is_confounding = True
+            if is_smoking == True:
+                Ys.append(label_sd)
+            elif is_feeding:
+                Ys.append(label_fd)
+            elif is_drinking:
+                Ys.append(label_dd)
+            elif is_confounding:
+                Ys.append(label_cd)
             else:
                 Ys.append(0)
 
+        Y = np.array(Ys)
+        print(pid, len(Y[Y==label_sd]), len(Y[Y==label_fd]), len(Y[Y==label_dd]) , len(Y[Y==label_cd]) )
 
         all_features.extend(features)
         # print('#cand = ', len(cand))
@@ -172,6 +190,12 @@ if __name__ == '__main__':
     Ys0 = Ys[Ys==0]
     all_features1 = all_features[Ys==1]
     Ys1 = Ys[Ys==1]
+    all_features2 = all_features[Ys==2]
+    Ys2 = Ys[Ys==2]
+    all_features3 = all_features[Ys==3]
+    Ys3 = Ys[Ys==3]
+    all_features4 = all_features[Ys==4]
+    Ys4 = Ys[Ys==4]
 
     roll0 = [x.sample[1] for i, x in enumerate(all_features0)]
     pitch0 = [x.sample[5] for i, x in enumerate(all_features0)]
@@ -179,16 +203,37 @@ if __name__ == '__main__':
     roll1 = [x.sample[1] for i, x in enumerate(all_features1)]
     pitch1 = [x.sample[5] for i, x in enumerate(all_features1)]
     yaw1 = [x.sample[9] for i, x in enumerate(all_features1)]
-    plt.plot(roll0, pitch0, '.b')
+    roll2 = [x.sample[1] for i, x in enumerate(all_features2)]
+    pitch2 = [x.sample[5] for i, x in enumerate(all_features2)]
+    yaw2 = [x.sample[9] for i, x in enumerate(all_features2)]
+
+    roll3 = [x.sample[1] for i, x in enumerate(all_features3)]
+    pitch3 = [x.sample[5] for i, x in enumerate(all_features3)]
+    yaw3 = [x.sample[9] for i, x in enumerate(all_features3)]
+
+    roll4 = [x.sample[1] for i, x in enumerate(all_features4)]
+    pitch4 = [x.sample[5] for i, x in enumerate(all_features4)]
+    yaw4 = [x.sample[9] for i, x in enumerate(all_features4)]
+
+    # plt.plot(roll0, pitch0, '.b')
+    plt.plot(roll4, pitch4, '.b')
     plt.plot(roll1, pitch1, '.r')
+    plt.plot(roll2, pitch2, '*g')
+    plt.plot(roll3, pitch3, 'dk')
     plt.title('roll-pitch')
     plt.show()
-    plt.plot(roll0, yaw0, '.b')
+    # plt.plot(roll0, yaw0, '.b')
+    plt.plot(roll4, yaw4, '.b')
     plt.plot(roll1, yaw1, '.r')
+    plt.plot(roll2, yaw2, '*g')
+    plt.plot(roll3, yaw3, 'dk')
     plt.title('roll-yaw')
     plt.show()
-    plt.plot(pitch0, yaw0, '.b')
+    # plt.plot(pitch0, yaw0, '.b')
+    plt.plot(pitch4, yaw4, '.b')
     plt.plot(pitch1, yaw1, '.r')
+    plt.plot(pitch2, yaw2, '*g')
+    plt.plot(pitch3, yaw3, 'dk')
     plt.title('pitch-yaw')
     plt.show()
 

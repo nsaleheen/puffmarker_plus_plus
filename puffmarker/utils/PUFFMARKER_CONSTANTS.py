@@ -48,3 +48,15 @@ MINIMUM_PUFFS_IN_EPISODE = 4
 
 LEFT_WRIST = 'leftwrist'
 RIGHT_WRIST = 'rightwrist'
+
+
+# NU ground truth
+label_sd = 1 # smoking dominant hand
+label_fd = 2 # feeding dominant hand
+label_dd = 3 # drinking dominant hand
+label_cd = 4 # confounding dominant hand
+
+text_sd = 'sd' # smoking dominant hand
+text_fd = 'fd' # feeding dominant hand
+text_dd = 'dd' # drinking dominant hand
+text_cd = 'cd' # confounding dominant hand
