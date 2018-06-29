@@ -97,7 +97,7 @@ def moving_average_convergence_divergence_new(slow_moving_average_data: List[Dat
                 prev_peak_diff = 0
             # prev_peak_dur = (slow_moving_average_data[start_index].start_time - slow_moving_average_data[
             #     i].start_time).total_seconds()
-            prev_peak_dur = i
+            prev_peak_start_index = i
 
             ay = [accel[i].sample[1] for i in range(i, start_index)]
             prev_ay_mean = np.mean(ay)
@@ -116,7 +116,7 @@ def moving_average_convergence_divergence_new(slow_moving_average_data: List[Dat
                 next_peak_diff = 0
             # next_peak_dur = (slow_moving_average_data[i].start_time - slow_moving_average_data[
             #     end_index].start_time).total_seconds()
-            next_peak_dur = i
+            next_peak_start_index = i
             ay = [accel[i].sample[1] for i in range(end_index, i)]
             nxt_ay_mean = np.mean(ay)
             nxt_ay_sd = np.std(ay)
@@ -124,10 +124,9 @@ def moving_average_convergence_divergence_new(slow_moving_average_data: List[Dat
             # if prev_peak_dur > 0.45 and next_peak_dur > 0.45 and prev_peak_dur < 4 and next_peak_dur < 4:
             intersection_points.append(DataPoint(start_time=slow_moving_average_data[start_index].start_time,
                                                  end_time=slow_moving_average_data[end_index].start_time,
-                                                 sample=[start_index, end_index, prev_peak_dur, next_peak_dur,
+                                                 sample=[start_index, end_index, prev_peak_start_index, next_peak_start_index,
                                                          prev_peak_diff, next_peak_diff,
                                                          prev_ay_mean, nxt_ay_mean, prev_ay_sd, nxt_ay_sd]))
-
         else:
             cur_index = cur_index + 1
 

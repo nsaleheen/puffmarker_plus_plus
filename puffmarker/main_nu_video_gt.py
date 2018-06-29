@@ -20,6 +20,7 @@ stream_process_puffs_filenames = ['202_0626_sp.csv', '205_0818_sp.csv',
                                   '211_1002_sp.csv',
                                   '215_1027_sp.csv',
                                   '218_1103_sp.csv']
+pids = ['202_update', '205', '209', '211', '212', '213', '215', '216', '217', '218']
 
 # pids = ['202_update']
 
@@ -102,6 +103,8 @@ def main_process_puffmarker():
         cand = [
             DataPoint(start_time=v.start_time, end_time=v.end_time, sample=[1])
             for v in features]
+        large_cand = [DataPoint(start_time=v.sample[-2], end_time=v.sample[-1], sample=[1])
+            for v in features]
 
         for f in cand:
             is_smoking = False
@@ -135,39 +138,60 @@ def main_process_puffmarker():
         print(pid, len(Y[Y==label_sd]), len(Y[Y==label_fd]), len(Y[Y==label_dd]) , len(Y[Y==label_cd]) )
 
         all_features.extend(features)
+
         # print('#cand = ', len(cand))
         #
         # plot_signal(rip, -7, 1.0/500, 'Rip', ['rip'])
-        #
-        # plot_signal(accel, 0, 1, 'Accel', ['accel-x', 'accel-y', 'accel-z'])
-        # plot_signal(gyr_mag, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag'])
-        # # plot_signal(gyr_mag_800, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag800'])
-        # # plot_signal(gyr_mag_8000, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag8000'])
-        #
-        # # plot_line([DataPoint(accel[0].start_time, accel[-1].start_time, '0', [1])], 0)
-        # plt.plot([accel[0].start_time, accel[-1].start_time], [0, 0], '--k')
-        #
-        # # plot_line([DataPoint(accel[0].start_time, accel[-1].start_time, '0', [1])], 2.5)
-        # # plot_point(gt, -3, 1, 'gt', ['puff'])
-        #
-        # plot_point(detected_puffs, -3, 1, pid, ['stream_processor'])
-        # plot_point(detected_puffs, 6, 1, pid, ['stream_processor'])
-        #
-        # plot_line(gt, 5)
-        # plot_line(cand, 4)
-        # for i, v in enumerate(gt):
-        #     t_delta = timedelta(seconds=5)
-        #     plt.xlim(v.start_time - t_delta, v.end_time + t_delta)
-        #     # plt.text(v.start_time - t_delta, 4, 'Cand', fontsize=20)
-        #     plt.text(v.start_time - t_delta, 5, 'gt', fontsize=20)
-        #     plt.title(pid + '_' + str(i))
-        #     plt.legend()
-        #     # plt.savefig(data_dir + '/plot_new/' + pid + '_' + str(i) + '_puff.png')
-        #     # plt.savefig(data_dir + '/plot_new/' + pid + '_' + str(i) + '_bite.png')
-        #     # plt.savefig(data_dir + '/plot_new/' + pid + '_' + str(i) + '_confounding_smoking.png')
-        #     plt.savefig(data_dir + '/plot_new/' + pid + '_' + str(i) + '_confounding_eating.png')
-        # plt.legend()
-        # plt.show()
+
+        plot_signal(accel, 0, 1, 'Accel', ['accel-x', 'accel-y', 'accel-z'])
+        plot_signal(gyr_mag, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag'])
+        plot_signal(gyr_mag_800, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag800'])
+        plot_signal(gyr_mag_8000, 2.5, 1.0 / 100, 'Gyro', ['gyro_mag8000'])
+
+        # plot_line([DataPoint(accel[0].start_time, accel[-1].start_time, '0', [1])], 0)
+        plt.plot([accel[0].start_time, accel[-1].start_time], [0, 0], '--k')
+
+        # plot_line([DataPoint(accel[0].start_time, accel[-1].start_time, '0', [1])], 2.5)
+        # plot_point(gt, -3, 1, 'gt', ['puff'])
+
+        plot_line(gt_sd, 5)
+        plot_line(gt_fd, 6)
+        plot_line(gt_dd, 7)
+        plot_line(gt_cd, 8)
+
+        plot_line(cand, 4)
+        plot_line(large_cand, 4.3)
+        for i, v in enumerate(gt_sd):
+            t_delta = timedelta(seconds=5)
+            plt.xlim(v.start_time - t_delta, v.end_time + t_delta)
+            # plt.text(v.start_time - t_delta, 4, 'Cand', fontsize=20)
+            plt.text(v.start_time - t_delta, 5, 'sd', fontsize=20)
+            plt.title(pid + '_' + str(i))
+            plt.legend()
+            plt.savefig(data_dir + '/plot_new/puff_' + pid + '_' + str(i) + '_puff.png')
+        for i, v in enumerate(gt_fd):
+            t_delta = timedelta(seconds=5)
+            plt.xlim(v.start_time - t_delta, v.end_time + t_delta)
+            plt.text(v.start_time - t_delta, 6, 'fd', fontsize=20)
+            plt.title(pid + '_' + str(i))
+            plt.legend()
+            plt.savefig(data_dir + '/plot_new/feeding_' + pid + '_' + str(i) + '.png')
+        for i, v in enumerate(gt_dd):
+            t_delta = timedelta(seconds=5)
+            plt.xlim(v.start_time - t_delta, v.end_time + t_delta)
+            plt.text(v.start_time - t_delta, 7, 'dd', fontsize=20)
+            plt.title(pid + '_' + str(i))
+            plt.legend()
+            plt.savefig(data_dir + '/plot_new/drinking_' + pid + '_' + str(i) + '.png')
+        for i, v in enumerate(gt_cd):
+            t_delta = timedelta(seconds=5)
+            plt.xlim(v.start_time - t_delta, v.end_time + t_delta)
+            plt.text(v.start_time - t_delta, 8, 'cd', fontsize=20)
+            plt.title(pid + '_' + str(i))
+            plt.legend()
+            plt.savefig(data_dir + '/plot_new/confounding_' + pid + '_' + str(i) + '.png')
+        plt.legend()
+        plt.show()
     return all_features, Ys
 
 
@@ -182,8 +206,6 @@ if __name__ == '__main__':
 
     all_features, Ys = main_process_puffmarker()
 
-    print('LEN::::', len(all_features), len(Ys), sum(Ys))
-
     Ys = np.array(Ys)
     all_features = np.array(all_features)
     all_features0 = all_features[Ys==0]
@@ -196,6 +218,9 @@ if __name__ == '__main__':
     Ys3 = Ys[Ys==3]
     all_features4 = all_features[Ys==4]
     Ys4 = Ys[Ys==4]
+
+    print('total', len(all_features), 'unknown', len(Ys0), 'smoking', len(Ys1), 'feeding', len(Ys2), 'drinking', len(Ys3), 'confounding', len(Ys4))
+    # total 4358 unknown 3533 smoking 147 feeding 369 drinking 31 confounding 278
 
     roll0 = [x.sample[1] for i, x in enumerate(all_features0)]
     pitch0 = [x.sample[5] for i, x in enumerate(all_features0)]

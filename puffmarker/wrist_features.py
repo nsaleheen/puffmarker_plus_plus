@@ -57,17 +57,24 @@ def compute_candidate_features(gyr_intersections, gyr_mag, roll_list, pitch_list
         start_index = I.sample[0]
         end_index = I.sample[1]
 
-        temp_roll = [roll_list[i].sample for i in range(start_index, end_index) if
-                     (accel_mag[i].sample > 0.9) and (accel_mag[i].sample < 1.1)]
-        temp_pitch = [pitch_list[i].sample for i in range(start_index, end_index) if
-                      (accel_mag[i].sample > 0.9) and (accel_mag[i].sample < 1.1)]
-        temp_yaw = [yaw_list[i].sample for i in range(start_index, end_index) if
-                    (accel_mag[i].sample > 0.9) and (accel_mag[i].sample < 1.1)]
+        # temp_roll = [roll_list[i].sample for i in range(start_index, end_index) if
+        #              (accel_mag[i].sample > 0.9) and (accel_mag[i].sample < 1.1)]
+        # temp_pitch = [pitch_list[i].sample for i in range(start_index, end_index) if
+        #               (accel_mag[i].sample > 0.9) and (accel_mag[i].sample < 1.1)]
+        # temp_yaw = [yaw_list[i].sample for i in range(start_index, end_index) if
+        #             (accel_mag[i].sample > 0.9) and (accel_mag[i].sample < 1.1)]
+        #
+        # Gmag_sub = [gyr_mag[i].sample for i in range(start_index, end_index) if
+        #             (accel_mag[i].sample > 0.9) and (accel_mag[i].sample < 1.1)]
+        # ay_sub = [accel[i].sample[1] for i in range(start_index, end_index) if
+        #             (accel_mag[i].sample > 0.9) and (accel_mag[i].sample < 1.1)]
 
-        Gmag_sub = [gyr_mag[i].sample for i in range(start_index, end_index) if
-                    (accel_mag[i].sample > 0.9) and (accel_mag[i].sample < 1.1)]
-        ay_sub = [accel[i].sample[1] for i in range(start_index, end_index) if
-                    (accel_mag[i].sample > 0.9) and (accel_mag[i].sample < 1.1)]
+        temp_roll = [roll_list[i].sample for i in range(start_index, end_index)]
+        temp_pitch = [pitch_list[i].sample for i in range(start_index, end_index)]
+        temp_yaw = [yaw_list[i].sample for i in range(start_index, end_index)]
+
+        Gmag_sub = [gyr_mag[i].sample for i in range(start_index, end_index)]
+        ay_sub = [accel[i].sample[1] for i in range(start_index, end_index)]
 
         if len(temp_roll) == 0:
             continue
@@ -83,6 +90,8 @@ def compute_candidate_features(gyr_intersections, gyr_mag, roll_list, pitch_list
 
         ay_mean, ay_median, ay_sd, ay_quartile = compute_basic_statistical_features(ay_sub)
 
+        stime_prevpeak = gyr_mag[I.sample[2]].start_time
+        etime_nextpeak = gyr_mag[I.sample[3]].start_time
         feature_vector = [duration,
                           roll_mean, roll_median, roll_sd, roll_quartile,
                           pitch_mean, pitch_median, pitch_sd, pitch_quartile,
@@ -90,7 +99,8 @@ def compute_candidate_features(gyr_intersections, gyr_mag, roll_list, pitch_list
                           gyro_mean, gyro_median, gyro_sd, gyro_quartile,
                           ay_mean, ay_median, ay_sd, ay_quartile,
                           I.sample[2], I.sample[3], I.sample[4], I.sample[5],
-                          I.sample[6], I.sample[7], I.sample[8], I.sample[9]]
+                          I.sample[6], I.sample[7], I.sample[8], I.sample[9],
+                          stime_prevpeak, etime_nextpeak]
 
         all_features.append(DataPoint(start_time=start_time, end_time=end_time, offset=offset, sample=feature_vector))
 

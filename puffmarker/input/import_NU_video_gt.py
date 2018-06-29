@@ -3,7 +3,7 @@ from typing import List
 from puffmarker.domain.datapoint import DataPoint
 from datetime import datetime, timedelta
 import puffmarker.input.import_stream_processor_inputs as spi
-
+import os
 from puffmarker.utils.PUFFMARKER_CONSTANTS import *
 import pytz
 tz = pytz.timezone('US/Central')
@@ -97,7 +97,8 @@ def load_detected_puff_timings(filename):
 
 filenames = ['acc_gyr_label_inlab_Eating.csv'
     , 'acc_gyr_label_inlab_Smoking.csv'
-    , 'acc_gyr_label_inlab_False.csv']
+    , 'acc_gyr_label_inlab_False.csv'
+    , 'acc_gyr_label_inlab_Smoking_Eating.csv']
 
 def import_data(cur_data_dir):
     accel=[]
@@ -108,12 +109,25 @@ def import_data(cur_data_dir):
     gt_cd=[]
 
     for filename in filenames:
-        accel_t, gyro_t, gt_sd_t, gt_fd_t, gt_dd_t, gt_cd_t = load_NU_data(cur_data_dir + filename)
-        accel.extend(accel_t)
-        gyro.extend(gyro_t)
-        gt_sd.extend(gt_sd_t)
-        gt_fd.extend(gt_fd_t)
-        gt_dd.extend(gt_dd_t)
-        gt_cd.extend(gt_cd_t)
+        if os.path.isfile(cur_data_dir+filename):
+            accel_t, gyro_t, gt_sd_t, gt_fd_t, gt_dd_t, gt_cd_t = load_NU_data(cur_data_dir + filename)
+            accel.extend([v for v in accel_t if v != None])
+            gyro.extend([v for v in gyro_t if v != None])
+            gt_sd.extend([v for v in gt_sd_t if v != None])
+            gt_fd.extend([v for v in gt_fd_t if v != None])
+            gt_dd.extend([v for v in gt_dd_t if v != None])
+            gt_cd.extend([v for v in gt_cd_t if v != None])
 
+    if len(accel)>0:
+        accel.sort(key=lambda x: x.start_time)
+    if len(gyro)>0:
+        gyro.sort(key=lambda x: x.start_time)
+    if len(gt_sd)>0:
+        gt_sd.sort(key=lambda x: x.start_time)
+    if len(gt_fd)>0:
+        gt_fd.sort(key=lambda x: x.start_time)
+    if len(gt_dd)>0:
+        gt_dd.sort(key=lambda x: x.start_time)
+    if len(gt_cd)>0:
+        gt_cd.sort(key=lambda x: x.start_time)
     return accel, gyro, gt_sd, gt_fd, gt_dd, gt_cd

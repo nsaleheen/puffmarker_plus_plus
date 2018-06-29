@@ -9,7 +9,7 @@ from puffmarker.utils.pickle_utils import *
 pids = ['p01', 'p02', 'p03', 'p04', 'p05', 'p06']
 
 
-# pids = ['p04', 'p05', 'p06']
+pids = ['p04', 'p05', 'p06']
 # pids = ['p05']
 
 
@@ -33,7 +33,7 @@ def main_process_segments():
     fastSize = 13
     slowSize = 131
 
-    data_dir = '/home/nsaleheen/data/csvdataSI_new/'
+    data_dir = '/home/nsleheen/data/csvdataSI_new/'
 
     Xs = []
     Ys = []
@@ -42,6 +42,7 @@ def main_process_segments():
     FP = 0
     FN = 0
     nPuff = 0
+    feature_vectors = []
     # for i in range(len(pids)):
     for pid in pids:
         basedir = data_dir + pid + '/'
@@ -79,15 +80,16 @@ def main_process_segments():
                     label = getLabel(st[k], et[k], smoking_epis, puffs)
                     if label != -1:
                         Xs.append(all_features[k].sample)
+                        feature_vectors.append(all_features[k])
                         if label == 0:
                             # Ys.append('non-puff')
                             Ys.append(0)
                         else:
                             # Ys.append('puff')
                             Ys.append(1)
-                            for m in range(5):
-                                Xs.append(all_features[k].sample)
-                                Ys.append(1)
+                            # for m in range(5):
+                            #     Xs.append(all_features[k].sample)
+                            #     Ys.append(1)
 
                 # ----------------------- for training print .............
                 for pt in puffs:
@@ -117,7 +119,8 @@ def main_process_segments():
     print('total positive= ' + str(nPuff))
     print('total candidates= ' + str(len(Ys)))
 
-    return Xs, Ys
+    # return Xs, Ys
+    return feature_vectors, Ys
 
 
 if __name__ == '__main__':

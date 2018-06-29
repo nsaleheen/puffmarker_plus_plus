@@ -60,4 +60,4 @@ def plot_line(data: List[DataPoint], y_offset=0, legend_list=[]):
         plt.plot([v.start_time, v.end_time], [y_offset, y_offset], c=c)
 
     for i, v in enumerate(data[1:]):
-        plt.plot([v.start_time, v.end_time], [y_offset, y_offset], c=c)
+        plt.plot([v.start_time, v.end_time], [y_offset+0.1, y_offset], c=c)
